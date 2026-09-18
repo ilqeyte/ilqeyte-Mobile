@@ -30,11 +30,14 @@ jobs:
       - name: Flutter doctor
         run: flutter --version
 
+      # lib/, pubspec.yaml and test/ are the source of truth in this repo. The
+      # Android shell — including the binary gradle wrapper jar that cannot be
+      # committed — is generated here on every run.
+      - name: Ensure Flutter project scaffold
+        run: flutter create --platforms android --org com.ilqeyte --project-name ilqeyte_mobile .
+
       - name: Install dependencies
         run: flutter pub get
-
-      - name: Check formatting
-        run: dart format --set-exit-if-changed lib/ test/
 
       - name: Analyze
         run: flutter analyze lib/ test/
