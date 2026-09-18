@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../app/router.dart';
-import '../../../app/theme/liquid_glass.dart';
-import '../../../core/models/provider_models.dart';
-import '../../../core/providers/provider_store.dart';
-import '../../shell/shell_controller.dart';
+import '../../app/router.dart';
+import '../../app/theme/liquid_glass.dart';
+import '../../core/models/provider_models.dart';
+import '../../core/providers/provider_store.dart';
+import '../shell/shell_controller.dart';
 import 'widgets/settings_scaffold.dart';
 
 /// The settings index. Provider kinds each get their own page downstream so a
@@ -86,7 +86,7 @@ class _NavRow extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: () {
           context.read<ShellController>().setRoute(route);
-          AppShell.go(route);
+          AppRouter.go(route);
         },
         child: GlassCard(
           alpha: 0.05,

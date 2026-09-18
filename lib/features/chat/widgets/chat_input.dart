@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../app/theme/liquid_glass.dart';
+import '../../../core/models/chat_models.dart';
 import '../chat_controller.dart';
 
 /// The composer: a glass trough pinned above the keyboard whose send button

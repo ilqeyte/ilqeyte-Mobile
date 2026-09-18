@@ -1,6 +1,7 @@
 /// The single internal agent model that every provider adapter normalizes onto.
 /// Nothing in here knows about OpenAI or Anthropic — that mapping lives in the
 /// adapters, so the agent loop speaks one language.
+library;
 
 enum ChatRole { system, user, assistant, tool }
 

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../app/theme/liquid_glass.dart';
-import '../../../core/models/provider_models.dart';
-import '../../../core/providers/provider_store.dart';
+import '../../app/theme/liquid_glass.dart';
+import '../../core/models/provider_models.dart';
+import '../../core/providers/provider_store.dart';
 import 'widgets/settings_scaffold.dart';
 
 /// Creates or edits a [ProviderConfig] of any kind. The API key goes straight

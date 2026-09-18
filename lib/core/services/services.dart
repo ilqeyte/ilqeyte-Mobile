@@ -4,13 +4,13 @@ import 'package:dio/dio.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-import '../../core/tools/tool_registry.dart';
-import 'agents/agent_runner.dart';
-import 'memory/memory_service.dart';
-import 'providers/media_service.dart';
-import 'providers/provider_store.dart';
-import 'storage/database.dart';
-import 'storage/vault.dart';
+import '../agents/agent_runner.dart';
+import '../memory/memory_service.dart';
+import '../providers/media_service.dart';
+import '../providers/provider_store.dart';
+import '../storage/database.dart';
+import '../storage/vault.dart';
+import '../tools/tool_registry.dart';
 
 /// The dependency root. Built once at startup and handed down with `Provider`,
 /// so nothing in the UI ever constructs a service itself.

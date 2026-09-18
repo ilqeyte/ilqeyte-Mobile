@@ -1,6 +1,7 @@
 /// Provider configuration. One model for three kinds of capability:
 /// [ProviderKind.agent] powers the chat/agent loop, while image and video
 /// providers power rich media generation. Settings keeps them strictly apart.
+library;
 
 enum ProviderKind { agent, image, video }
 

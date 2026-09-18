@@ -4,7 +4,6 @@ import 'package:uuid/uuid.dart';
 import '../memory/memory_service.dart';
 import '../models/chat_models.dart';
 import '../models/provider_models.dart';
-import '../providers/provider_adapter.dart';
 import '../providers/registry.dart';
 import '../tools/tool.dart';
 import '../tools/tool_registry.dart';

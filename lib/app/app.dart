@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/providers/provider_store.dart';
-import '../../core/services/services.dart';
-import '../../features/chat/chat_controller.dart';
-import '../../features/shell/shell_controller.dart';
+import '../core/providers/provider_store.dart';
+import '../core/services/services.dart';
+import '../features/chat/chat_controller.dart';
+import '../features/shell/shell_controller.dart';
 import '../features/shell/app_shell.dart';
 import 'theme/liquid_glass.dart';
 

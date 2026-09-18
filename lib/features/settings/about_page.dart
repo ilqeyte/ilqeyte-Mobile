@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../app/theme/liquid_glass.dart';
+import '../../app/theme/liquid_glass.dart';
 import 'widgets/settings_scaffold.dart';
 
 class AboutPage extends StatelessWidget {

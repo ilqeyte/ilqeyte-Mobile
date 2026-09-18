@@ -32,7 +32,7 @@ class FakeHttpAdapter extends HttpClientAdapter {
   }
 
   @override
-  void close() {}
+  void close({bool force = false}) {}
 }
 
 /// Always fails with a shaped [DioException], the way a 401 does.
@@ -55,5 +55,5 @@ class ErrorHttpAdapter extends HttpClientAdapter {
   }
 
   @override
-  void close() {}
+  void close({bool force = false}) {}
 }

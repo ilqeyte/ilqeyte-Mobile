@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../app/router.dart';
-import '../../../app/theme/liquid_glass.dart';
-import '../../../core/models/chat_models.dart';
-import '../../../core/storage/database.dart';
-import '../../chat/chat_controller.dart';
-import '../../shell/shell_controller.dart';
-import '../../settings/widgets/settings_scaffold.dart';
+import '../../app/router.dart';
+import '../../app/theme/liquid_glass.dart';
+import '../../core/models/chat_models.dart';
+import '../../core/storage/database.dart';
+import '../chat/chat_controller.dart';
+import '../shell/shell_controller.dart';
+import '../settings/widgets/settings_scaffold.dart';
 
 /// Every past run, newest first. Tapping one restores it to the chat — the
 /// conversation, its mode and its tool history all come back together.
@@ -35,7 +35,7 @@ class AutomationsPage extends StatelessWidget {
                   onTap: () {
                     chat.resume(row.id);
                     context.read<ShellController>().setRoute(AppRoutes.chat);
-                    AppShell.go(AppRoutes.chat);
+                    AppRouter.go(AppRoutes.chat);
                   },
                 ),
               );

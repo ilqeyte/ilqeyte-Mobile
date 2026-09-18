@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/models/provider_models.dart';
+import '../../core/models/provider_models.dart';
 import 'widgets/providers_page.dart';
 
 class ImageProvidersPage extends StatelessWidget {

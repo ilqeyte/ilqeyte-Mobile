@@ -31,7 +31,7 @@ class Sidebar extends StatelessWidget {
 
   void _navigate(BuildContext context, String route) {
     context.read<ShellController>().setRoute(route);
-    AppShell.go(route);
+    AppRouter.go(route);
     onClose?.call();
   }
 
@@ -172,7 +172,7 @@ class _NewChatButton extends StatelessWidget {
       onTap: () {
         context.read<ChatController>().newChat();
         context.read<ShellController>().setRoute(AppRoutes.chat);
-        AppShell.go(AppRoutes.chat);
+        AppRouter.go(AppRoutes.chat);
       },
       child: GlassCard(
         alpha: 0.07,
@@ -202,7 +202,7 @@ class _ProviderStatus extends StatelessWidget {
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: () => AppShell.go(AppRoutes.agentProviders),
+      onTap: () => AppRouter.go(AppRoutes.agentProviders),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
         child: Row(

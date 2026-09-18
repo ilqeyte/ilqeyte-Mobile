@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-import '../../features/automations/automations_page.dart';
-import '../../features/shell/shell_controller.dart';
-import '../../features/chat/chat_screen.dart';
-import '../../features/plugins/plugins_page.dart';
-import '../../features/settings/about_page.dart';
-import '../../features/settings/agent_providers_page.dart';
-import '../../features/settings/image_providers_page.dart';
-import '../../features/settings/settings_home_page.dart';
-import '../../features/settings/video_providers_page.dart';
+import '../features/automations/automations_page.dart';
+import '../features/chat/chat_screen.dart';
+import '../features/plugins/plugins_page.dart';
+import '../features/settings/about_page.dart';
+import '../features/settings/agent_providers_page.dart';
+import '../features/settings/image_providers_page.dart';
+import '../features/settings/settings_home_page.dart';
+import '../features/settings/video_providers_page.dart';
+import '../features/shell/shell_controller.dart';
 
 /// Flat route table. The shell's nested [Navigator] drives these; pushing a
 /// sub-page also updates [ShellController.route] so the sidebar stays in sync.
@@ -21,6 +21,29 @@ class AppRouter {
   static const String imageProviders = AppRoutes.imageProviders;
   static const String videoProviders = AppRoutes.videoProviders;
   static const String about = AppRoutes.about;
+
+  /// The nested navigator the shell owns; [go] drives it from anywhere.
+  static final GlobalKey<NavigatorState> contentKey =
+      GlobalKey<NavigatorState>(debugLabel: 'content');
+
+  static const _sections = <String>{
+    AppRoutes.chat,
+    AppRoutes.automations,
+    AppRoutes.plugins,
+    AppRoutes.settings,
+  };
+
+  /// Navigate the body. Top-level sections replace the stack so back from any
+  /// section exits cleanly; sub-pages push on top of their parent.
+  static void go(String route) {
+    final nav = contentKey.currentState;
+    if (nav == null) return;
+    if (_sections.contains(route)) {
+      nav.pushNamedAndRemoveUntil(route, (_) => false);
+    } else {
+      nav.pushNamed(route);
+    }
+  }
 
   /// Every transition is a fade — nothing slides, nothing bounces.
   static Route<void> fadeRoute(WidgetBuilder builder, RouteSettings settings) {

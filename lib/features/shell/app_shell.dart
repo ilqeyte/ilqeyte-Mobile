@@ -12,28 +12,6 @@ import 'sidebar.dart';
 class AppShell extends StatelessWidget {
   const AppShell({super.key});
 
-  static final GlobalKey<NavigatorState> contentKey =
-      GlobalKey<NavigatorState>(debugLabel: 'content');
-
-  static const _sections = <String>{
-    AppRoutes.chat,
-    AppRoutes.automations,
-    AppRoutes.plugins,
-    AppRoutes.settings,
-  };
-
-  /// Navigate the body. Top-level sections replace the stack so back from any
-  /// section exits cleanly; sub-pages push on top of their parent.
-  static void go(String route) {
-    final nav = contentKey.currentState;
-    if (nav == null) return;
-    if (_sections.contains(route)) {
-      nav.pushNamedAndRemoveUntil(route, (_) => false);
-    } else {
-      nav.pushNamed(route);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final wide = MediaQuery.of(context).size.width >= 840;
@@ -103,7 +81,7 @@ class _Body extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Navigator(
-      key: AppShell.contentKey,
+      key: AppRouter.contentKey,
       initialRoute: AppRoutes.chat,
       onGenerateRoute: AppRouter.onGenerateRoute,
     );

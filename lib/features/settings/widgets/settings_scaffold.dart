@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../app/router.dart';
 import '../../../app/theme/liquid_glass.dart';
 
 /// Shared chrome for every settings page: a transparent stage, a back afford

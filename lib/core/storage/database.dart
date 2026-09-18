@@ -216,7 +216,7 @@ class DatabaseService {
   List<Map<String, dynamic>> searchMemory(List<String> words,
       {int limit = 6}) {
     if (words.isEmpty) return const [];
-    final clauses = [for (final w in words) 'data LIKE ?'];
+    final clauses = [for (final _ in words) 'data LIKE ?'];
     final args = <Object?>[
       for (final w in words) '%$w%',
     ];

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../app/theme/liquid_glass.dart';
-import '../../../core/services/services.dart';
-import '../../../core/tools/tool.dart';
-import '../../settings/widgets/settings_scaffold.dart';
+import '../../app/theme/liquid_glass.dart';
+import '../../core/services/services.dart';
+import '../../core/tools/tool.dart';
+import '../settings/widgets/settings_scaffold.dart';
 
 /// The tool catalog as it stands today: built-ins only, but registered through
 /// the same seam third-party plugins will use.
