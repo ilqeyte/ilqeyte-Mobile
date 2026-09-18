@@ -24,6 +24,14 @@ class ProviderConfig {
   final bool isDefault;
   final DateTime createdAt;
 
+  /// Passed straight to [joinEndpoint]. Most OpenAI-compatible providers keep
+  /// their API under `/v1`; a few (Gemini, Novita, Zhipu…) do not.
+  final bool ensureV1;
+
+  /// The models the user enabled for this provider. [defaultModel] is the one
+  /// actually sent; the rest are remembered for the model switcher.
+  final List<String> models;
+
   const ProviderConfig({
     required this.id,
     required this.name,
@@ -31,6 +39,8 @@ class ProviderConfig {
     required this.protocol,
     required this.baseUrl,
     this.defaultModel,
+    this.ensureV1 = true,
+    this.models = const [],
     this.isDefault = false,
     required this.createdAt,
   });
@@ -44,6 +54,11 @@ class ProviderConfig {
         baseUrl: (j['baseUrl'] as String?) ?? '',
         defaultModel: j['defaultModel'] as String?,
         isDefault: (j['isDefault'] as bool?) ?? false,
+        ensureV1: (j['ensureV1'] as bool?) ?? true,
+        models: (j['models'] as List?)
+                ?.map((e) => e.toString())
+                .toList(growable: false) ??
+            const [],
         createdAt: j['createdAt'] != null
             ? DateTime.parse(j['createdAt'] as String)
             : DateTime.now(),
@@ -57,6 +72,8 @@ class ProviderConfig {
         'baseUrl': baseUrl,
         'defaultModel': defaultModel,
         'isDefault': isDefault,
+        'ensureV1': ensureV1,
+        'models': models,
         'createdAt': createdAt.toIso8601String(),
       };
 
@@ -65,6 +82,8 @@ class ProviderConfig {
     String? baseUrl,
     String? defaultModel,
     bool? isDefault,
+    bool? ensureV1,
+    List<String>? models,
     LlmProtocol? protocol,
   }) =>
       ProviderConfig(
@@ -74,6 +93,8 @@ class ProviderConfig {
         protocol: protocol ?? this.protocol,
         baseUrl: baseUrl ?? this.baseUrl,
         defaultModel: defaultModel ?? this.defaultModel,
+        ensureV1: ensureV1 ?? this.ensureV1,
+        models: models ?? this.models,
         isDefault: isDefault ?? this.isDefault,
         createdAt: createdAt,
       );

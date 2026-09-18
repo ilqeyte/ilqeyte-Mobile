@@ -4,16 +4,27 @@ import 'package:uuid/uuid.dart';
 
 import '../../app/theme/liquid_glass.dart';
 import '../../core/models/provider_models.dart';
+import '../../core/providers/builtin_catalog.dart';
 import '../../core/providers/provider_store.dart';
+import 'widgets/provider_logo.dart';
 import 'widgets/settings_scaffold.dart';
 
 /// Creates or edits a [ProviderConfig] of any kind. The API key goes straight
 /// to the secure vault — the database never sees it.
 class ProviderFormPage extends StatefulWidget {
-  const ProviderFormPage({super.key, required this.kind, this.provider});
+  const ProviderFormPage({
+    super.key,
+    required this.kind,
+    this.provider,
+    this.builtin,
+  });
 
   final ProviderKind kind;
   final ProviderConfig? provider;
+
+  /// A catalog entry the user picked: base URL, protocol and quirks are fixed,
+  /// so the form only asks for a key and picks models from a live list.
+  final BuiltinProvider? builtin;
 
   @override
   State<ProviderFormPage> createState() => _ProviderFormPageState();
@@ -29,6 +40,7 @@ class _ProviderFormPageState extends State<ProviderFormPage> {
 
   late LlmProtocol _protocol;
   List<String> _models = [];
+  List<String> _selected = [];
   bool _discovering = false;
   String? _error;
   bool _saving = false;
@@ -38,11 +50,13 @@ class _ProviderFormPageState extends State<ProviderFormPage> {
   void initState() {
     super.initState();
     final p = widget.provider;
-    _name = TextEditingController(text: p?.name ?? '');
-    _baseUrl = TextEditingController(text: p?.baseUrl ?? '');
+    final b = widget.builtin;
+    _name = TextEditingController(text: p?.name ?? b?.name ?? '');
+    _baseUrl = TextEditingController(text: p?.baseUrl ?? b?.baseUrl ?? '');
     _key = TextEditingController();
     _model = TextEditingController(text: p?.defaultModel ?? '');
-    _protocol = p?.protocol ?? LlmProtocol.openaiCompatible;
+    _protocol = p?.protocol ?? b?.protocol ?? LlmProtocol.openaiCompatible;
+    _selected = p?.models.toList() ?? const [];
   }
 
   @override
@@ -54,8 +68,39 @@ class _ProviderFormPageState extends State<ProviderFormPage> {
     super.dispose();
   }
 
+  bool get _isBuiltin => widget.builtin != null;
+
+  bool get _ensureV1 =>
+      widget.builtin?.ensureV1 ?? widget.provider?.ensureV1 ?? true;
+
+  /// The key to send to the endpoint right now: whatever is typed, falling back
+  /// to the stored key when the field is blank (null keeps it untouched).
+  String? get _effectiveKey {
+    final typed = _key.text.trim();
+    if (typed.isNotEmpty) return typed;
+    if (widget.builtin?.localServer ?? false) return 'local';
+    return null;
+  }
+
   bool get _isValid =>
       _name.text.trim().isNotEmpty && _baseUrl.text.trim().isNotEmpty;
+
+  /// Tap an undiscovered model to enable and activate it; tap the active one to
+  /// disable it; tap another enabled model to promote it to active.
+  void _toggleModel(String model) {
+    setState(() {
+      if (_selected.contains(model)) {
+        if (_selected.first == model) {
+          _selected.remove(model);
+        } else {
+          _selected.remove(model);
+          _selected.insert(0, model);
+        }
+      } else {
+        _selected.insert(0, model);
+      }
+    });
+  }
 
   /// Probes the endpoint for its model list so the default is picked, not
   /// typed. Failures are soft: the field stays a free-text input.
@@ -68,6 +113,7 @@ class _ProviderFormPageState extends State<ProviderFormPage> {
       kind: widget.kind,
       protocol: _protocol,
       baseUrl: _baseUrl.text.trim(),
+      ensureV1: _ensureV1,
       createdAt: DateTime.now(),
     );
 
@@ -77,7 +123,9 @@ class _ProviderFormPageState extends State<ProviderFormPage> {
     });
 
     try {
-      final models = await context.read<ProviderStore>().modelsFor(temp);
+      final models = await context
+          .read<ProviderStore>()
+          .modelsFor(temp, apiKey: _effectiveKey);
       setState(() {
         _models = models;
         _error = models.isEmpty ? 'No models found at that endpoint.' : null;
@@ -95,13 +143,20 @@ class _ProviderFormPageState extends State<ProviderFormPage> {
     final store = context.read<ProviderStore>();
     final isFirst = store.ofKind(widget.kind).isEmpty;
 
+    // For a builtin, the model list the user picked is the source of truth and
+    // its first entry is the default; otherwise the free-text field is.
+    final picked = _isBuiltin ? _selected : null;
     final config = ProviderConfig(
       id: widget.provider?.id ?? _uuid.v4(),
       name: _name.text.trim(),
       kind: widget.kind,
       protocol: _protocol,
       baseUrl: _baseUrl.text.trim(),
-      defaultModel: _model.text.trim().isEmpty ? null : _model.text.trim(),
+      defaultModel: (picked?.isNotEmpty ?? false)
+          ? picked!.first
+          : (_model.text.trim().isEmpty ? null : _model.text.trim()),
+      ensureV1: _ensureV1,
+      models: picked ?? widget.provider?.models ?? const [],
       isDefault: widget.provider?.isDefault ?? false,
       createdAt: widget.provider?.createdAt ?? DateTime.now(),
     );
@@ -110,9 +165,11 @@ class _ProviderFormPageState extends State<ProviderFormPage> {
     try {
       // The first provider of a kind becomes the default automatically;
       // otherwise the choice is preserved from the stored config.
+      // A locally-served endpoint has no key, but the agent loop's key check
+      // needs a non-empty value — a placeholder keeps it moving.
       await store.save(
         config,
-        apiKey: _key.text,
+        apiKey: _effectiveKey,
         makeDefault: isFirst || config.isDefault,
       );
       if (mounted) Navigator.of(context).maybePop();
@@ -132,41 +189,56 @@ class _ProviderFormPageState extends State<ProviderFormPage> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 40),
         children: [
-          _Field(
-            label: 'Name',
-            controller: _name,
-            hint: 'e.g. Personal OpenAI',
-          ),
-          const SizedBox(height: 16),
-          const _Label('Protocol'),
-          const SizedBox(height: 8),
-          _ProtocolPicker(
-            protocol: _protocol,
-            onChanged: (p) => setState(() => _protocol = p),
-          ),
-          const SizedBox(height: 16),
-          _Field(
-            label: 'Base URL',
-            controller: _baseUrl,
-            hint: 'https://api.openai.com/v1',
-            keyboardType: TextInputType.url,
-            autocorrect: false,
-          ),
-          const SizedBox(height: 16),
+          if (_isBuiltin) ...[
+            _BuiltinHeader(builtin: widget.builtin!),
+            const SizedBox(height: 16),
+          ] else ...[
+            _Field(
+              label: 'Name',
+              controller: _name,
+              hint: 'e.g. Personal OpenAI',
+            ),
+            const SizedBox(height: 16),
+            const _Label('Protocol'),
+            const SizedBox(height: 8),
+            _ProtocolPicker(
+              protocol: _protocol,
+              onChanged: (p) => setState(() => _protocol = p),
+            ),
+            const SizedBox(height: 16),
+            _Field(
+              label: 'Base URL',
+              controller: _baseUrl,
+              hint: 'https://api.openai.com/v1',
+              keyboardType: TextInputType.url,
+              autocorrect: false,
+            ),
+            const SizedBox(height: 16),
+          ],
           _KeyField(
             controller: _key,
             obscure: _obscureKey,
-            placeholder:
-                editing ? 'Leave blank to keep the stored key' : 'sk-…',
+            placeholder: _isBuiltin && widget.builtin!.localServer
+                ? 'Not required — any value works'
+                : (editing ? 'Leave blank to keep the stored key' : 'sk-…'),
             onToggle: () => setState(() => _obscureKey = !_obscureKey),
           ),
           const SizedBox(height: 16),
-          _ModelField(
-            controller: _model,
-            models: _models,
-            discovering: _discovering,
-            onDiscover: _discover,
-          ),
+          if (_isBuiltin)
+            _BuiltinModels(
+              models: _models,
+              selected: _selected,
+              discovering: _discovering,
+              onDiscover: _discover,
+              onToggle: _toggleModel,
+            )
+          else
+            _ModelField(
+              controller: _model,
+              models: _models,
+              discovering: _discovering,
+              onDiscover: _discover,
+            ),
           if (_error != null) ...[
             const SizedBox(height: 12),
             Text(_error!,
@@ -366,6 +438,161 @@ class _ProtocolPicker extends StatelessWidget {
   }
 }
 
+/// Fixed identity of a catalog entry: logo, name, endpoint and caveats.
+class _BuiltinHeader extends StatelessWidget {
+  const _BuiltinHeader({required this.builtin});
+
+  final BuiltinProvider builtin;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassCard(
+      alpha: 0.06,
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        children: [
+          ProviderLogo(builtin: builtin, size: 44),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        builtin.name,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    if (builtin.experimental) ...[
+                      const SizedBox(width: 6),
+                      _ExperimentalBadge(),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  builtin.baseUrl,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: kSecondaryText,
+                    fontSize: 11.5,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+                if (builtin.note != null) ...[
+                  const SizedBox(height: 5),
+                  Text(
+                    builtin.note!,
+                    style: const TextStyle(
+                      color: kSecondaryText,
+                      fontSize: 12,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ExperimentalBadge extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: glassFill(0.12),
+        borderRadius: BorderRadius.circular(5),
+      ),
+      child: const Text(
+        'experimental',
+        style: TextStyle(
+          color: kAccent,
+          fontSize: 9.5,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+/// Multi-select model list for a builtin endpoint: fetch once, then tap to
+/// enable. The first enabled model is the one used by default.
+class _BuiltinModels extends StatelessWidget {
+  const _BuiltinModels({
+    required this.models,
+    required this.selected,
+    required this.discovering,
+    required this.onDiscover,
+    required this.onToggle,
+  });
+
+  final List<String> models;
+  final List<String> selected;
+  final bool discovering;
+  final VoidCallback onDiscover;
+  final ValueChanged<String> onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final active = selected.isEmpty ? null : selected.first;
+    final chips = models.isEmpty ? selected : models;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const _Label('Models'),
+            const Spacer(),
+            _DiscoverButton(loading: discovering, onTap: onDiscover),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          active == null
+              ? 'Fetch the list, then tap the models you want. The first one you '
+                  'tap is used by default.'
+              : 'Using $active — tap another enabled model to switch, or tap the '
+                  'active one to remove it.',
+          style: const TextStyle(
+            color: kSecondaryText,
+            fontSize: 12,
+            height: 1.45,
+          ),
+        ),
+        if (chips.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final model in chips)
+                _ModelChip(
+                  label: model,
+                  selected: model == active,
+                  enabled: selected.contains(model),
+                  onTap: () => onToggle(model),
+                ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 class _ModelField extends StatelessWidget {
   const _ModelField({
     required this.controller,
@@ -459,10 +686,17 @@ class _ModelChip extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.enabled = false,
   });
 
   final String label;
+
+  /// The one model in [enabled] that is currently used.
   final bool selected;
+
+  /// Turned on by the user but not the active default.
+  final bool enabled;
+
   final VoidCallback onTap;
 
   @override
@@ -475,16 +709,28 @@ class _ModelChip extends StatelessWidget {
         curve: Curves.easeOutCubic,
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: selected ? kAccent : glassFill(0.08),
+          color: selected
+              ? kAccent
+              : (enabled ? glassFill(0.14) : glassFill(0.08)),
           borderRadius: BorderRadius.circular(9),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? Colors.white : kPrimaryText,
-            fontSize: 12,
-            fontFamily: 'monospace',
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (enabled && !selected)
+              const Padding(
+                padding: EdgeInsets.only(right: 5),
+                child: Icon(Icons.check_rounded, size: 13, color: kAccent),
+              ),
+            Text(
+              label,
+              style: TextStyle(
+                color: selected ? Colors.white : kPrimaryText,
+                fontSize: 12,
+                fontFamily: 'monospace',
+              ),
+            ),
+          ],
         ),
       ),
     );

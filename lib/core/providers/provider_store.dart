@@ -105,10 +105,15 @@ class ProviderStore extends ChangeNotifier {
     return key;
   }
 
-  /// Best-effort model discovery for the settings form.
-  Future<List<String>> modelsFor(ProviderConfig provider) async {
+  /// Best-effort model discovery for the settings form. Pass an [apiKey] when
+  /// discovering against a config that has not been saved yet — the builtin
+  /// flow fetches models with a key that only lives in a text field.
+  Future<List<String>> modelsFor(
+    ProviderConfig provider, {
+    String? apiKey,
+  }) async {
     final adapter = adapterFor(provider.protocol, _dio);
-    final key = await keyOf(provider.id);
+    final key = apiKey ?? await keyOf(provider.id);
     return adapter.listModels(provider: provider, apiKey: key);
   }
 }

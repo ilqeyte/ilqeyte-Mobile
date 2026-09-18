@@ -19,7 +19,8 @@ class OpenAiCompatibleAdapter extends ProviderAdapter {
     required String? apiKey,
     required ChatRequest request,
   }) async* {
-    final url = joinEndpoint(provider.baseUrl, '/chat/completions');
+    final url = joinEndpoint(provider.baseUrl, '/chat/completions',
+        ensureV1: provider.ensureV1);
     final body = <String, dynamic>{
       'model': request.model,
       'messages': request.messages.expand(_encodeMessage).toList(),
@@ -107,7 +108,8 @@ class OpenAiCompatibleAdapter extends ProviderAdapter {
     required ProviderConfig provider,
     required String? apiKey,
   }) async {
-    final url = joinEndpoint(provider.baseUrl, '/models');
+    final url =
+        joinEndpoint(provider.baseUrl, '/models', ensureV1: provider.ensureV1);
     try {
       final res = await dio.get<dynamic>(
         url,

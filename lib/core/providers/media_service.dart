@@ -19,7 +19,8 @@ class ImageGenerationService {
     int count = 1,
     String size = '1024x1024',
   }) async {
-    final url = joinEndpoint(provider.baseUrl, '/images/generations');
+    final url = joinEndpoint(provider.baseUrl, '/images/generations',
+        ensureV1: provider.ensureV1);
     try {
       final res = await _dio.post<dynamic>(
         url,
@@ -80,7 +81,8 @@ class VideoGenerationService {
     required String prompt,
     int durationSeconds = 5,
   }) async {
-    final url = joinEndpoint(provider.baseUrl, '/videos/generations');
+    final url = joinEndpoint(provider.baseUrl, '/videos/generations',
+        ensureV1: provider.ensureV1);
     try {
       final res = await _dio.post<dynamic>(
         url,

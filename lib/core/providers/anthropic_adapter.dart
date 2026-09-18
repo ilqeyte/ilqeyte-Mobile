@@ -20,7 +20,8 @@ class AnthropicCompatibleAdapter extends ProviderAdapter {
     required String? apiKey,
     required ChatRequest request,
   }) async* {
-    final url = joinEndpoint(provider.baseUrl, '/messages');
+    final url =
+        joinEndpoint(provider.baseUrl, '/messages', ensureV1: provider.ensureV1);
     final system = request.messages
         .where((m) => m.role == ChatRole.system)
  .map((m) => m.text)
@@ -139,6 +140,41 @@ class AnthropicCompatibleAdapter extends ProviderAdapter {
 
     yield ChatStreamDelta(
         toolCalls: toolCalls.isEmpty ? null : toolCalls, done: true);
+  }
+
+  @override
+  Future<List<String>> listModels({
+    required ProviderConfig provider,
+    required String? apiKey,
+  }) async {
+    // Anthropic's /v1/models answers in the same shape as OpenAI's.
+    final url =
+        joinEndpoint(provider.baseUrl, '/models', ensureV1: provider.ensureV1);
+    try {
+      final res = await dio.get<dynamic>(
+        url,
+        options: Options(
+          headers: <String, dynamic>{
+            'anthropic-version': '2023-06-01',
+            if (apiKey != null && apiKey.isNotEmpty) 'x-api-key': apiKey,
+          },
+        ),
+      );
+      final data = res.data;
+      if (data is Map<String, dynamic> && data['data'] is List) {
+        final out = <String>{};
+        for (final e in data['data'] as List) {
+          if (e is Map<String, dynamic> && e['id'] is String) {
+            out.add(e['id'] as String);
+          }
+        }
+        final sorted = out.toList()..sort();
+        return sorted;
+      }
+    } catch (_) {
+      // Best effort — the settings UI tolerates an empty list.
+    }
+    return const [];
   }
 
   static List<Map<String, dynamic>> _encodeTurns(List<ChatMessage> turns) {
