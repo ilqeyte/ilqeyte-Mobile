@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 /// One Server-Sent Event frame.
 class SseFrame {
   final String? event;
@@ -38,7 +40,7 @@ int _doubleNewlineIndex(List<int> b) {
 }
 
 SseFrame? _parseFrame(List<int> raw) {
-  final text = String.fromCharCodes(raw);
+  final text = utf8.decode(raw, allowMalformed: true);
   final dataLines = <String>[];
   String? event;
   for (final line in text.split('\n')) {

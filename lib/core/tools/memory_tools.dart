@@ -8,7 +8,7 @@ class MemorySaveTool extends Tool {
           description: 'Store a durable note, fact or lesson so future runs '
               'remember it. Use this for anything worth keeping.',
           category: 'Memory',
-          inputSchema: {
+          inputSchema: const {
             'type': 'object',
             'properties': {
               'text': {'type': 'string'},
@@ -45,7 +45,7 @@ class MemoryRecallTool extends Tool {
           name: 'memory_recall',
           description: 'Recall notes and lessons relevant to a query.',
           category: 'Memory',
-          inputSchema: {
+          inputSchema: const {
             'type': 'object',
             'properties': {
               'query': {'type': 'string'},

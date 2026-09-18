@@ -27,6 +27,12 @@ jobs:
           channel: stable
           cache: true
 
+      # package:sqlite3 dlopens libsqlite3.so over FFI. The base runner image
+      # ships only libsqlite3.so.0, so the dev symlink is installed for the
+      # storage-backed tests.
+      - name: Install native SQLite
+        run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
+
       - name: Flutter doctor
         run: flutter --version
 

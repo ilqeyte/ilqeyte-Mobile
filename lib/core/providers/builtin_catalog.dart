@@ -381,7 +381,7 @@ const List<BuiltinProvider> builtinProviders = [
 /// The entries shown on one settings page, filtered and alphabetized.
 List<BuiltinProvider> builtinsFor(ProviderKind kind) =>
     (builtinProviders.where((p) => p.kind == kind).toList()
-          ..sort((a, b) => a.name.compareTo(b.name)));
+          ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase())));
 
 /// Traces a saved provider back to the catalog entry that created it.
 BuiltinProvider? builtinById(String id, ProviderKind kind) {
@@ -390,4 +390,3 @@ BuiltinProvider? builtinById(String id, ProviderKind kind) {
   }
   return null;
 }
-];

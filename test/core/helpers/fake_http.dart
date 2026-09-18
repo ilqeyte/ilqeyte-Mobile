@@ -11,9 +11,16 @@ ResponseBody sseBody(String payload) => ResponseBody(
       headers: const {'content-type': ['text/event-stream']},
     );
 
+/// A plain JSON response — the shape `/models` answers with.
+ResponseBody jsonBody(Map<String, dynamic> payload) => ResponseBody(
+      Stream.fromIterable([Uint8List.fromList(utf8.encode(jsonEncode(payload)))]),
+      200,
+      headers: const {'content-type': ['application/json']},
+    );
+
 /// Routes every request through [respond], which gets the decoded request body.
 /// Tests key the response off the message count to script multi-round loops.
-class FakeHttpAdapter extends HttpClientAdapter {
+class FakeHttpAdapter implements HttpClientAdapter {
   FakeHttpAdapter(this.respond);
 
   final ResponseBody Function(Map<String, dynamic> body) respond;
@@ -36,7 +43,7 @@ class FakeHttpAdapter extends HttpClientAdapter {
 }
 
 /// Always fails with a shaped [DioException], the way a 401 does.
-class ErrorHttpAdapter extends HttpClientAdapter {
+class ErrorHttpAdapter implements HttpClientAdapter {
   @override
   Future<ResponseBody> fetch(
     RequestOptions options,

@@ -10,7 +10,9 @@ String _resolve(ToolContext ctx, String relative) {
   final root = Directory(ctx.workspacePath).absolute.path;
   final joined = p.join(root, relative.isEmpty ? '.' : relative);
   final normalized = p.normalize(joined);
-  if (!p.isWithin(root, normalized)) {
+  // The workspace root itself is a valid target — isWithin() is false for a
+  // path that equals the root, so it is allowed explicitly.
+  if (normalized != root && !p.isWithin(root, normalized)) {
     throw ArgumentError('Path escapes the workspace: "$relative"');
   }
   return normalized;
@@ -22,7 +24,7 @@ class ReadFileTool extends Tool {
           name: 'read_file',
           description: 'Read the full contents of a file inside the workspace.',
           category: 'Files',
-          inputSchema: {
+          inputSchema: const {
             'type': 'object',
             'properties': {
               'path': {
@@ -64,7 +66,7 @@ class WriteFileTool extends Tool {
           description: 'Create or overwrite a file inside the workspace.',
           category: 'Files',
           isSideEffecting: true,
-          inputSchema: {
+          inputSchema: const {
             'type': 'object',
             'properties': {
               'path': {'type': 'string'},
@@ -100,7 +102,7 @@ class EditFileTool extends Tool {
               'text is not present, so nothing is silently rewritten.',
           category: 'Files',
           isSideEffecting: true,
-          inputSchema: {
+          inputSchema: const {
             'type': 'object',
             'properties': {
               'path': {'type': 'string'},
@@ -153,7 +155,7 @@ class ListFilesTool extends Tool {
           name: 'list_files',
           description: 'List entries in a workspace directory.',
           category: 'Files',
-          inputSchema: {
+          inputSchema: const {
             'type': 'object',
             'properties': {
               'dir': {
@@ -205,7 +207,7 @@ class SearchFilesTool extends Tool {
           description: 'Grep for text across the workspace. Returns matching '
               'lines with their line numbers.',
           category: 'Files',
-          inputSchema: {
+          inputSchema: const {
             'type': 'object',
             'properties': {
               'pattern': {'type': 'string'},
@@ -261,7 +263,7 @@ class MakeDirectoryTool extends Tool {
           description: 'Create a directory inside the workspace.',
           category: 'Files',
           isSideEffecting: true,
-          inputSchema: {
+          inputSchema: const {
             'type': 'object',
             'properties': {
               'path': {'type': 'string'},
@@ -292,7 +294,7 @@ class DeletePathTool extends Tool {
               'Destructive — the user is asked first.',
           category: 'Files',
           isSideEffecting: true,
-          inputSchema: {
+          inputSchema: const {
             'type': 'object',
             'properties': {
               'path': {'type': 'string'},

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ilqeyte_mobile/core/models/chat_models.dart';
@@ -115,7 +116,7 @@ void main() {
     final dio = Dio()..httpClientAdapter = ErrorHttpAdapter();
 
     final deltas = await OpenAiCompatibleAdapter(dio)
-        .chatStream(provider: _provider(), apiKey: 'bad', request: _request())
+        .chatStream(provider: _provider(), apiKey: 'bad', request: _request)
         .toList();
 
     expect(deltas, hasLength(1));

@@ -230,7 +230,7 @@ class DatabaseService {
         {
           'id': r['id'] as String,
           'weight': (r['weight'] as num).toDouble(),
-          ...jsonDecode(r['data']) as Map<String, dynamic>,
+          'data': jsonDecode(r['data']) as Map<String, dynamic>,
         }
     ];
   }
@@ -241,7 +241,10 @@ class DatabaseService {
         [limit]);
     return [
       for (final r in rows)
-        {'id': r['id'] as String, ...jsonDecode(r['data']) as Map<String, dynamic>}
+        {
+          'id': r['id'] as String,
+          'data': jsonDecode(r['data']) as Map<String, dynamic>,
+        }
     ];
   }
 }

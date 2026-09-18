@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ilqeyte_mobile/core/models/chat_models.dart';
@@ -82,7 +84,7 @@ void main() {
           ));
 
     final deltas = await AnthropicCompatibleAdapter(dio)
-        .chatStream(provider: _provider(), apiKey: 'key', request: _request())
+        .chatStream(provider: _provider(), apiKey: 'key', request: _request)
         .toList();
 
     final calls = deltas.last.toolCalls;
@@ -96,11 +98,38 @@ void main() {
     final dio = Dio()..httpClientAdapter = ErrorHttpAdapter();
 
     final deltas = await AnthropicCompatibleAdapter(dio)
-        .chatStream(provider: _provider(), apiKey: 'bad', request: _request())
+        .chatStream(provider: _provider(), apiKey: 'bad', request: _request)
         .toList();
 
     expect(deltas, hasLength(1));
     expect(deltas.single.error, 'Invalid API key');
     expect(deltas.single.done, isTrue);
+  });
+
+  test('listModels parses and sorts the catalog', () async {
+    final dio = Dio()
+      ..httpClientAdapter = FakeHttpAdapter((_) => jsonBody({
+            'data': [
+              {'id': 'claude-sonnet-4'},
+              {'id': 'claude-3-opus'},
+              {'id': 'claude-3-5-haiku'},
+            ],
+          }));
+
+    final models = await AnthropicCompatibleAdapter(dio)
+        .listModels(provider: _provider(), apiKey: 'key');
+
+    expect(models,
+        ['claude-3-5-haiku', 'claude-3-opus', 'claude-sonnet-4']);
+  });
+
+  test('listModels swallows a failed fetch and returns nothing', () async {
+    final dio = Dio()..httpClientAdapter = ErrorHttpAdapter();
+
+    expect(
+      await AnthropicCompatibleAdapter(dio)
+          .listModels(provider: _provider(), apiKey: 'bad'),
+      isEmpty,
+    );
   });
 }

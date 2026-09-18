@@ -53,7 +53,7 @@ class ChatEmptyState extends StatelessWidget {
             const SizedBox(height: 20),
             if (!hasProvider)
               FilledButton.icon(
-                onPressed: () => AppRouter.go(AppRoutes.agentProviders),
+                onPressed: () => AppRouter.go(AppRouter.agentProviders),
                 icon: const Icon(Icons.cloud_rounded),
                 label: const Text('Add provider'),
               ),
